@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truth or Dare 真心话大冒险 🎉</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* Language toggle */
+    .lang-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .lang-btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn.active {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .lang-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.7;
+      margin-bottom: 2rem;
+    }
+
+    /* Level selector */
+    .level-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .level-btn {
+      padding: 0.8rem 1.8rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: 3px solid transparent;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 1px;
+    }
+
+    .level-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+    }
+
+    .level-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .level-warmup {
+      background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(86, 171, 47, 0.4);
+    }
+
+    .level-hot {
+      background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(247, 151, 30, 0.4);
+    }
+
+    .level-insane {
+      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(235, 51, 73, 0.4);
+    }
+
+    /* Choice buttons */
+    .choice-container {
+      display: none;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .choice-container.visible {
+      display: flex;
+    }
+
+    .choice-btn {
+      padding: 1.2rem 3rem;
+      font-size: 1.4rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-4px) scale(1.05);
+    }
+
+    .choice-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .btn-truth {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-truth:hover {
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-dare {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: #fff;
+      box-shadow: 0 8px 30px rgba(245, 87, 108, 0.4);
+    }
+
+    .btn-dare:hover {
+      box-shadow: 0 12px 40px rgba(245, 87, 108, 0.6);
+    }
+
+    /* Current level badge */
+    .level-badge {
+      display: none;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      letter-spacing: 1px;
+    }
+
+    .level-badge.visible {
+      display: inline-block;
+    }
+
+    .level-badge.warm-up {
+      background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+    }
+
+    .level-badge.hot {
+      background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    }
+
+    .level-badge.insane {
+      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    }
+
+    /* Card */
+    .card-container {
+      perspective: 1000px;
+      width: 320px;
+      height: 440px;
+      display: none;
+    }
+
+    .card-container.visible {
+      display: block;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.8s ease;
+      border-radius: 20px;
+    }
+
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-back::after {
+      content: '🎴';
+      font-size: 5rem;
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-front.truth {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card-front.dare {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .card-type {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      opacity: 0.8;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-text {
+      font-size: 1.3rem;
+      line-height: 1.6;
+      font-weight: 600;
+    }
+
+    .card-emoji {
+      font-size: 3rem;
+      margin-top: 1.5rem;
+    }
+
+    /* Shuffle animation */
+    @keyframes shuffle {
+      0% { transform: translateX(0) rotateZ(0); }
+      25% { transform: translateX(-20px) rotateZ(-4deg); }
+      50% { transform: translateX(20px) rotateZ(4deg); }
+      75% { transform: translateX(-10px) rotateZ(-2deg); }
+      100% { transform: translateX(0) rotateZ(0); }
+    }
+
+    .card.shuffling {
+      animation: shuffle 0.35s ease-in-out;
+    }
+
+    /* Play again */
+    .play-again {
+      margin-top: 2rem;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: none;
+    }
+
+    .play-again.visible {
+      display: inline-block;
+    }
+
+    .play-again:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      top: -10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes fall {
+      0% { opacity: 1; transform: translateY(0) rotateZ(0deg); }
+      100% { opacity: 0; transform: translateY(100vh) rotateZ(720deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="langEn" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" id="langZh" onclick="setLang('zh')">中文</button>
+  </div>
+
+  <h1 id="title">Truth or Dare 🎉</h1>
+  <p class="subtitle" id="subtitle">Choose your level...</p>
+
+  <!-- Level selection -->
+  <div class="level-container" id="levelContainer">
+    <button class="level-btn level-warmup" onclick="selectLevel('warm-up')"><span id="levelWarmupText">☀️ Warm-up</span></button>
+    <button class="level-btn level-hot" onclick="selectLevel('hot')"><span id="levelHotText">🔥 Hot</span></button>
+    <button class="level-btn level-insane" onclick="selectLevel('insane')"><span id="levelInsaneText">🤯 Insane</span></button>
+  </div>
+
+  <!-- Level badge -->
+  <div class="level-badge" id="levelBadge"></div>
+
+  <!-- Truth or Dare choice -->
+  <div class="choice-container" id="choiceContainer">
+    <button class="choice-btn btn-truth" id="btnTruth" onclick="choose('truth')">Truth</button>
+    <button class="choice-btn btn-dare" id="btnDare" onclick="choose('dare')">Dare</button>
+  </div>
+
+  <div class="card-container" id="cardContainer">
+    <div class="card" id="card">
+      <div class="card-face card-back"></div>
+      <div class="card-face card-front" id="cardFront">
+        <div class="card-type" id="cardType"></div>
+        <div class="card-text" id="cardText"></div>
+        <div class="card-emoji" id="cardEmoji"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;">
+    <button class="play-again" id="playAgain" onclick="playAgain()">Play Again 🔄</button>
+    <button class="play-again" id="changeLevel" onclick="changeLevel()">Change Level 🎚️</button>
+  </div>
+
+  <script>
+    let questions = { 'warm-up': [], 'hot': [], 'insane': [] };
+    // Tracks dealt cards per level+type so no repeats until all used
+    let dealt = { 'warm-up': { truth: [], dare: [] }, 'hot': { truth: [], dare: [] }, 'insane': { truth: [], dare: [] } };
+    let lang = 'en';
+    let currentLevel = null;
+
+    const i18n = {
+      en: {
+        title: 'Truth or Dare 🎉',
+        subtitleLevel: 'Choose your level...',
+        subtitleChoice: 'Pick your fate...',
+        truth: 'Truth',
+        dare: 'Dare',
+        truthLabel: '✨ Truth ✨',
+        dareLabel: '🔥 Dare 🔥',
+        playAgain: 'Play Again 🔄',
+        changeLevel: 'Change Level 🎚️',
+        warmup: '☀️ Warm-up',
+        hot: '🔥 Hot',
+        insane: '🤯 Insane',
+      },
+      zh: {
+        title: '真心话大冒险 🎉',
+        subtitleLevel: '选择难度...',
+        subtitleChoice: '选择你的命运...',
+        truth: '真心话',
+        dare: '大冒险',
+        truthLabel: '✨ 真心话 ✨',
+        dareLabel: '🔥 大冒险 🔥',
+        playAgain: '再来一次 🔄',
+        changeLevel: '换难度 🎚️',
+        warmup: '☀️ 热身',
+        hot: '🔥 火热',
+        insane: '🤯 疯狂',
+      }
+    };
+
+    function setLang(newLang) {
+      lang = newLang;
+      document.getElementById('langEn').classList.toggle('active', lang === 'en');
+      document.getElementById('langZh').classList.toggle('active', lang === 'zh');
+      updateUI();
+    }
+
+    function updateUI() {
+      const t = i18n[lang];
+      document.getElementById('title').textContent = t.title;
+      document.getElementById('subtitle').textContent = currentLevel ? t.subtitleChoice : t.subtitleLevel;
+      document.getElementById('btnTruth').textContent = t.truth;
+      document.getElementById('btnDare').textContent = t.dare;
+      document.getElementById('playAgain').textContent = t.playAgain;
+      document.getElementById('changeLevel').textContent = t.changeLevel;
+      document.getElementById('levelWarmupText').textContent = t.warmup;
+      document.getElementById('levelHotText').textContent = t.hot;
+      document.getElementById('levelInsaneText').textContent = t.insane;
+
+      // Update badge if visible
+      if (currentLevel) {
+        const badgeLabels = { 'warm-up': t.warmup, 'hot': t.hot, 'insane': t.insane };
+        document.getElementById('levelBadge').textContent = badgeLabels[currentLevel];
+      }
+    }
+
+    function selectLevel(level) {
+      currentLevel = level;
+      document.getElementById('levelContainer').style.display = 'none';
+      document.getElementById('choiceContainer').classList.add('visible');
+
+      const badge = document.getElementById('levelBadge');
+      badge.className = `level-badge visible ${level}`;
+      const t = i18n[lang];
+      const badgeLabels = { 'warm-up': t.warmup, 'hot': t.hot, 'insane': t.insane };
+      badge.textContent = badgeLabels[level];
+
+      document.getElementById('subtitle').textContent = i18n[lang].subtitleChoice;
+    }
+
+    // Load questions from Google Sheets (published as CSV) or local fallback
+    // HOW TO SET UP:
+    // 1. Create a Google Sheet with columns: type, level, text_en, text_zh, emoji
+    // 2. File → Share → Publish to web → select "Comma-separated values (.csv)" → Publish
+    // 3. Copy the URL and paste it below
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRQF3uNmxpLE01VO2qP9L0SW9kIXJYLGT1lC5uKwOugBwfenLKtdJY43jNhqOqu3ylq1cREyKPJZfAe/pub?gid=0&single=true&output=csv';
+
+    async function loadQuestions() {
+      try {
+        const url = SHEET_CSV_URL || 'questions.csv';
+        const response = await fetch(url);
+        const text = await response.text();
+        const lines = text.trim().split('\n').slice(1); // skip header
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          // Split by comma — find first 4 commas to get 5 fields
+          const firstComma = trimmed.indexOf(',');
+          if (firstComma === -1) continue;
+          const secondComma = trimmed.indexOf(',', firstComma + 1);
+          if (secondComma === -1) continue;
+
+          const type = trimmed.substring(0, firstComma).trim();
+          const level = trimmed.substring(firstComma + 1, secondComma).trim();
+
+          // For the rest (text_en, text_zh, emoji), find the LAST comma for emoji
+          const rest = trimmed.substring(secondComma + 1);
+          const lastComma = rest.lastIndexOf(',');
+          if (lastComma === -1) continue;
+
+          const texts = rest.substring(0, lastComma);
+          const emoji = rest.substring(lastComma + 1).trim();
+
+          // Split texts into text_en and text_zh by first comma between them
+          const midComma = texts.indexOf(',');
+          if (midComma === -1) continue;
+
+          const textEn = texts.substring(0, midComma).trim();
+          const textZh = texts.substring(midComma + 1).trim();
+
+          if (!type || !level || !textEn) continue;
+
+          const entry = { type, text_en: textEn, text_zh: textZh, emoji: emoji || '🎯' };
+
+          if (questions[level]) {
+            questions[level].push(entry);
+          }
+        }
+
+        const total = Object.values(questions).reduce((sum, arr) => sum + arr.length, 0);
+        console.log(`Loaded ${total} questions from ${url === 'questions.csv' ? 'local file' : 'Google Sheets'}`);
+      } catch (err) {
+        console.error('Failed to load questions:', err);
+        const fallback = { type: 'truth', text_en: "Could not load questions!", text_zh: "无法加载题目！", emoji: "⚠️" };
+        questions['warm-up'] = [fallback];
+        questions['hot'] = [fallback];
+        questions['insane'] = [fallback];
+      }
+    }
+
+    function choose(type) {
+      const container = document.getElementById('cardContainer');
+      const card = document.getElementById('card');
+      const cardFront = document.getElementById('cardFront');
+      const cardType = document.getElementById('cardType');
+      const cardText = document.getElementById('cardText');
+      const cardEmoji = document.getElementById('cardEmoji');
+      const choiceContainer = document.getElementById('choiceContainer');
+      const t = i18n[lang];
+
+      // Filter by type and level
+      const pool = questions[currentLevel].filter(q => q.type === type);
+      if (pool.length === 0) return;
+
+      // No-repeat: deal from remaining, reshuffle when exhausted
+      let remaining = dealt[currentLevel][type];
+      if (remaining.length === 0) {
+        remaining = [...pool];
+        // Fisher-Yates shuffle
+        for (let i = remaining.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+        }
+        dealt[currentLevel][type] = remaining;
+      }
+      const picked = remaining.pop();
+
+      // Set card content
+      cardFront.className = `card-face card-front ${type}`;
+      cardType.textContent = type === 'truth' ? t.truthLabel : t.dareLabel;
+      cardText.textContent = lang === 'zh' ? picked.text_zh : picked.text_en;
+      cardEmoji.textContent = picked.emoji;
+
+      // Hide buttons, show card
+      choiceContainer.classList.remove('visible');
+      document.getElementById('levelBadge').classList.remove('visible');
+      container.classList.add('visible');
+
+      // Quick shuffle animation then flip
+      card.classList.add('shuffling');
+      setTimeout(() => {
+        card.classList.remove('shuffling');
+        card.classList.add('shuffling');
+        setTimeout(() => {
+          card.classList.remove('shuffling');
+          card.classList.add('flipped');
+          spawnConfetti();
+          document.getElementById('playAgain').classList.add('visible');
+          document.getElementById('changeLevel').classList.add('visible');
+        }, 350);
+      }, 350);
+    }
+
+    function playAgain() {
+      const container = document.getElementById('cardContainer');
+      const card = document.getElementById('card');
+
+      card.classList.remove('flipped', 'shuffling');
+      container.classList.remove('visible');
+      document.getElementById('playAgain').classList.remove('visible');
+      document.getElementById('changeLevel').classList.remove('visible');
+
+      // Stay on same level, show truth/dare choice
+      document.getElementById('choiceContainer').classList.add('visible');
+      const badge = document.getElementById('levelBadge');
+      badge.classList.add('visible');
+    }
+
+    function changeLevel() {
+      const container = document.getElementById('cardContainer');
+      const card = document.getElementById('card');
+
+      card.classList.remove('flipped', 'shuffling');
+      container.classList.remove('visible');
+      document.getElementById('playAgain').classList.remove('visible');
+      document.getElementById('changeLevel').classList.remove('visible');
+
+      // Go back to level selection
+      currentLevel = null;
+      document.getElementById('choiceContainer').classList.remove('visible');
+      document.getElementById('levelBadge').classList.remove('visible');
+      document.getElementById('levelContainer').style.display = 'flex';
+      document.getElementById('subtitle').textContent = i18n[lang].subtitleLevel;
+    }
+
+    function reset() { changeLevel(); }
+
+    function spawnConfetti() {
+      const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#ffd700', '#00ff88', '#ff6b6b'];
+      for (let i = 0; i < 40; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = (Math.random() * 8 + 5) + 'px';
+        confetti.style.height = (Math.random() * 8 + 5) + 'px';
+        confetti.style.animation = `fall ${Math.random() * 2 + 1.5}s linear forwards`;
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 4000);
+      }
+    }
+
+    // Init
+    loadQuestions();
+  </script>
+</body>
+</html>
